@@ -1,0 +1,12 @@
+CREATE TABLE `cleaning` (
+  `ticket_number` int(11) NOT NULL,
+  `item_id` int(11),
+  `style_number` varchar(11),
+  `style` varchar(50),
+  `size` int(11),
+  `length` int(11),
+  `slot_area` varchar(10),
+  `slot_number` varchar(10),
+  `clean` tinyint(1) DEFAULT NULL,
+  `location` varchar(255)
+);
