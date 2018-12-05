@@ -204,4 +204,4 @@ CREATE TABLE ticket_create (
   returned datetime,
   repair_type varchar(255),
   location varchar(255)
-  );
+  ); 
