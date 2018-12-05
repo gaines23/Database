@@ -1,0 +1,206 @@
+USE master
+GO
+
+IF DB_ID('InvoDB') IS NOT NULL
+	DROP DATABASE InvoDB
+
+CREATE DATABASE InvoDB
+GO
+
+USE InvoDB
+GO
+
+CREATE TABLE Employee( --Casinos, etc
+	EmpID INT NOT NULL PRIMARY KEY
+	, FirstName VARCHAR(MAX) NOT NULL
+	, LastName VARCHAR(MAX) NOT NULL
+	, Address VARCHAR(MAX) NOT NULL
+	, PhoneNmber VARCHAR(12) NOT NULL
+	, Email VARCHAR(MAX) NOT NULL
+	, Hierarchy INT --FK Hierarchy
+	, SlotNum INT -- FK Slots
+	, AltID INT -- FK UserOptions
+)
+
+CREATE TABLE Customer( --Laundry Matt 
+	CustomerID INT NOT NULL PRIMARY KEY
+	, FirstName VARCHAR(MAX) NOT NULL
+	, LastName VARCHAR(MAX) NOT NULL
+	, Address VARCHAR(MAX) NOT NULL
+	, PhoneNumber VARCHAR(12)
+	, Email VARCHAR(MAX)
+)
+
+CREATE TABLE CompanyInfo( -- Works for all
+	 CompName VARCHAR NOT NULL
+	, CompAddress VARCHAR
+	, CompPhone VARCHAR
+	, CompEmail VARCHAR
+	CONSTRAINT CompID PRIMARY KEY (CompName)
+)
+
+CREATE TABLE Cleaners( --  
+	CleanersID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, CleanerName VARCHAR
+	, CleanerAddress VARCHAR
+	, CleanerPhone VARCHAR
+	, CleanerEmail VARCHAR
+	, TurnAroundTime TIME
+	, Garm INT --FK, Garment
+	, Repairs INT --FK, Repairs
+	, Assingment INT -- FK(pulls in id#, emp#..etc) Employees assinged to specific garments 
+)
+
+CREATE TABLE Manufacturer( --For companies that buy their clothing 
+	ManufacturerID INT IDENTITY NOT NULL PRIMARY KEY
+	, ManuName VARCHAR 
+	, ManuAddress VARCHAR
+	, ManuPhone VARCHAR
+	, ManuEmail VARCHAR
+	, Garm INT --FK, Garment
+	, GarmCost INT --FK, Default values
+)
+
+CREATE TABLE GarmDefaultValues(
+	GarmDefaultID INT --PK
+	, GarmType VARCHAR
+	, GarmSize VARCHAR
+	, GarmLength VARCHAR
+	, GarmCost MONEY
+	, MultiUse BIT
+	, GarmDescription VARCHAR
+	, Department INT -- FK, Hierarchy
+)
+
+CREATE TABLE GarmDepreciation(
+	GarmDeprecID INT --PK
+	, GarmNumOfCleanings INT
+	, GarmDepreciationCost MONEY
+	, GarmAlterDerep MONEY
+)
+
+CREATE TABLE GarmActivity(-- 1-1 EMPLOYEE; 1-1 GARM -- 1 Act TO 1 Emp TO 1 Garm
+	GarmActivityID INT NOT NULL
+	, EmpID INT -- FK Emp
+	, Slot INT -- FK, Hierarchy
+	, Garm INT --FK, Garm
+	, PickupTime INT -- INVENTORY
+	, DropoffTime INT -- INVENTORY
+	, Assigned BIT
+	, Loaned BIT 
+	, OneForOne VARCHAR -- Loan one out to emp
+	, CONSTRAINT GarmActID PRIMARY KEY (GarmActivityID)
+)
+
+CREATE TABLE Inventory(
+--ADD, FIND, DELETE - 3 CATEGORIES
+	InventoryID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, GarmentID INT -- FK, Garment
+	, Assignment INT --FK, Cleaner
+	, PickupTime TIME 
+	, PickupDate DATE
+	, DropoffTime TIME
+	, DropoffDate DATE
+	, Barcode INT --FK, Scan
+	, RFID INT --FK, Scan
+)
+
+CREATE TABLE NonTaggedGarm( -- May have to define further
+	NonTaggedGarmID INT NOT NULL
+	, Garm INT -- FK
+	, Assigned VARCHAR -- fk
+	, Loaned BIT --May be VARCHAR, depending on how we define this
+	, Sold BIT
+	, CONSTRAINT NoTagsID PRIMARY KEY (NonTaggedGarmID)
+)
+
+CREATE TABLE Hierarchy(
+	JobHierarchyID INT --PK
+	, Division VARCHAR
+	, Department VARCHAR
+	, Job VARCHAR
+	, PAR_Level VARCHAR -- employee accountability of garments per emp; if emp has 3, then there has to be 3 at all times
+)
+
+CREATE TABLE PurchaseOrder( --Companies
+	PurchaseOrderID INT NOT NULL
+	, RFID INT -- FK
+	, Barcode INT -- FK
+	, CONSTRAINT PurchOrdID PRIMARY KEY (PurchaseOrderID)
+)
+
+CREATE TABLE EmpOrder( --Luandry Matts
+	EmpOrderID INT NOT NULL
+	, EmpID INT -- FK EmployeeID
+	, Hierarchy INT -- FK Hierarchy 
+	, Garm INT -- FK Garm
+	, CONSTRAINT EmpOrdID PRIMARY KEY (EmpOrderID)
+)
+
+CREATE TABLE Scan(
+	ScanID INT NOT NULL
+	, RFID INT
+	, BARCODE VARCHAR
+	, ScanTime TIMESTAMP NOT NULL
+	, CONSTRAINT ScanNumID PRIMARY KEY (ScanID, ScanTime)
+)
+
+CREATE TABLE Repairs(
+	RepairID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, Garm INT -- FK, Garment
+	, RepairType VARCHAR
+	, RepairPerson VARCHAR
+	, RepairTime TIMESTAMP
+)
+
+CREATE TABLE Locker(
+	LockerNumber INT NOT NULL
+	, SerialNum INT 
+	, Combonation INT
+	, EmpID INT --FK, Emp
+	, Reasons VARCHAR
+	, CONSTRAINT LockNum PRIMARY KEY (LockerNumber)
+)
+
+CREATE TABLE TicketCreate( -- Laundry Matts 
+	 TicCusAcctID INT NOT NULL  --pulled cus ID
+	, TicketNumber INT NOT NULL  --IDENTITY NOT NULL PRIMARY KEY 
+	, PickupDate DATE NULL
+	, PickupTime TIME(0) NULL
+	, PlantID INT NULL
+	, RouteID INT NULL
+	, TransactionDate DATE NOT NULL 
+	, TransactionTime TIME(0) NOT NULL
+	, CONSTRAINT PKTicketID PRIMARY KEY (TicketNumber)
+	, CONSTRAINT FKCusInfoID FOREIGN KEY(TicCusAcctID)
+		REFERENCES CustomerCreate(AccountNumber)
+		ON DELETE CASCADE    
+		ON UPDATE CASCADE
+)
+
+CREATE TABLE DeviceOptions(
+	DeviceOptionID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, SigPad VARCHAR
+	, LabelPrinter VARCHAR
+	, TouchScreen VARCHAR
+	, BulkScanner VARCHAR
+)
+
+
+CREATE TABLE UserRights( --Used for Activity (Labor) Report; may incorporate hierarchy
+	UserRights INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, EmpID INT -- FK, Emp
+	,
+)
+
+CREATE TABLE EmpUserOptions( --customizable and specified categories below
+	UserOpID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, SalesTax INT --FK, potentially Accting
+	, SalePriceAdjustment INT -- FK, '..'
+	, EmpSlotLenghth INT -- FK, figure out what this means
+	, ParLevels INT --FK
+	, InventoryDepreciation INT-- fk
+	, AltID INT -- FK, Tied to EMP
+	, Username VARCHAR
+	, EmpPassword VARCHAR -- Can create security feats
+)
