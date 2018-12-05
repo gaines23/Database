@@ -1,0 +1,240 @@
+USE master
+GO
+
+IF DB_ID('InvoDB') IS NOT NULL
+	DROP DATABASE InvoDB
+
+CREATE DATABASE InvoDB
+GO
+
+USE InvoDB
+GO
+
+/*
+In order to make tables relational, have to first figure out whether the info in each 
+auto incremented or standalone PK
+This is determined if the data can be easily incremented up or if there are specific
+IDs that we can work with instead to create a CONTRAINT to make it more unique 
+Important for ever changing data that will be deleted a lot and resued
+Next - ON CASCADE, what keys match that need to be deleted throughout DB?
+*/
+
+
+/*
+They also create a HR compatible program where you input employee information
+in order to efficienty look up and combine garments and employees together
+within a batch 
+*/
+
+/*
+Laundry system, linen system, hr system, uniform system
+*/
+
+CREATE TABLE Employee(
+--Use when company is business (casino) so emloyees are 
+-- Will be different if comp gives specific empIDs
+	EmployeeID INT NOT NULL
+	, EmpFirstName CHAR
+	, EmpLastName CHAR
+	, EmpAddress VARCHAR
+	, EmpPhone VARCHAR
+	, EmpEmail VARCHAR
+	, CONSTRAINT EmpID PRIMARY KEY (EmployeeID, EmpLastName)
+)
+
+CREATE TABLE Customer(
+--Use when the cleaner is the company, customer is the owner of garments
+	CustomerID INT NOT NULL
+	, CusFirstName CHAR
+	, CusLastName CHAR
+	, CusAddress VARCHAR
+	, CusPhone VARCHAR
+	, CusEmail VARCHAR
+	, CONSTRAINT CusID PRIMARY KEY (CustomerID, CusLastName)
+)
+
+CREATE TABLE Garments(
+	GarmentID INT NOT NULL
+	, GarmDescription INT NOT NULL -- FK, garmDefinition
+	, Hierarchy INT --FK 
+	, Scan INT --FK
+	, SlotNum INT -- FK, hierarchy
+	, CONSTRAINT GarmID PRIMARY KEY (GarmentID)
+)
+
+CREATE TABLE GarmDefinition(
+	GarmDescp INT NOT NULL
+	, Department VARCHAR NOT NULL --FK, Hierarchy
+	, MultiUse BIT
+	, NumOfCleanings INT -- FK?; amount of times cleaned (depreciation)
+	, GarmDescription VARCHAR -- used to explain type of garment
+	, CONSTRAINT GarmDefID PRIMARY KEY (GarmDescp)
+)
+
+CREATE TABLE GarmDepreciation(
+	GarmDeprecID INT NOT NULL
+	, GarmNumOfCleanings INT
+	, GarmCost INT -- FK, GarmDefaultValues
+	, GarmDepreciationCost INT
+	, GarmAlterDeprec VARCHAR
+	, CONSTRAINT GarmDepID PRIMARY KEY (GarmDeprecID)
+)
+
+CREATE TABLE GarmDefaultValues( --combined with definition 
+	GarmDefaultID INT NOT NULL
+	, GarmType VARCHAR
+	, GarmSize VARCHAR
+	, GarmLength VARCHAR
+	, GarmCost INT
+	, CONSTRAINT GarmDefID PRIMARY KEY (GarmDefaultID)
+)
+
+CREATE TABLE EmpJobGarm( --MANY TO ONE EMPLOYEE
+	EmpJobGarmID INT NOT NULL
+	, Emp INT -- FK, Employee
+	, Hierarchy INT --FK, hierarchy
+	, Garms INT --FK, Garm
+	, Slot INT --FK, hierarchy, says what # slots each job can have
+	, AltID INT --FK, UserOptions
+	, CONSTRAINT EmpJGarmID PRIMARY KEY (EmpJobGarmID)
+)
+
+CREATE TABLE EmpOrder( --MANY TO ONE EMPLOYEE
+	EmpOrderID INT NOT NULL
+	, Emp INT -- FK, Employee
+	, Hierarchy INT --FK, hierarchy
+	, Garms INT --FK, Garm
+	, CONSTRAINT EmpOrID PRIMARY KEY (EmpOrderID)
+)
+
+CREATE TABLE GarmActivity(-- 1-1 EMPLOYEE; 1-1 GARM -- 1 Act TO 1 Emp TO 1 Garm
+	GarmActivityID INT NOT NULL
+	, EmpID INT -- FK Emp
+	, Slot INT -- FK, Hierarchy
+	, Garm INT --FK, Garm
+	, PickupTime INT -- INVENTORY
+	, DropoffTime INT -- INVENTORY
+	, Assigned BIT
+	, OneForOne VARCHAR -- Loan one out to emp
+	, CONSTRAINT GarmActID PRIMARY KEY (GarmActivityID)
+)
+
+CREATE TABLE NonTaggedGarm(
+	NonTaggedGarmID INT NOT NULL
+	, Garm INT -- FK
+	, Assigned VARCHAR -- fk
+	, Loaned VARCHAR
+	, Sold VARCHAR
+	, CONSTRAINT NoTagsID PRIMARY KEY (NonTaggedGarmID)
+)
+
+CREATE TABLE PurchaseOrder(
+	PurchaseOrderID INT NOT NULL
+	, RFID INT --FK
+	, Barcode INT --FK
+	, CONSTRAINT PurchOrID PRIMARY KEY (PurchaseOrderID)
+)
+
+CREATE TABLE Hierarchy(
+	JobHierarchyID INT NOT NULL
+	, Division VARCHAR
+	, Department VARCHAR
+	, Job VARCHAR
+	, PAR_Level VARCHAR 
+	, SlotNum INT -- Based on emp dept, div, job (customizable)
+	, CONSTRAINT JobHeirID PRIMARY KEY (JobHierarchyID)
+)
+
+CREATE TABLE Scan(
+	ScanID INT NOT NULL
+	, RFID INT
+	, BARCODE VARCHAR
+	, ScanTime TIMESTAMP NOT NULL
+	, CONSTRAINT ScanNumID PRIMARY KEY (ScanID, ScanTime)
+)
+
+CREATE TABLE Manufacturer(
+	ManufacturerID INT IDENTITY NOT NULL PRIMARY KEY
+	, ManuName VARCHAR 
+	, ManuAddress VARCHAR
+	, ManuPhone VARCHAR
+	, ManuEmail VARCHAR
+	, Garm INT --FK, Garment
+	, GarmCost INT --FK, Default values
+)
+
+CREATE TABLE Cleaners(
+	CleanersID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, CleanerName VARCHAR
+	, CleanerAddress VARCHAR
+	, CleanerPhone VARCHAR
+	, CleanerEmail VARCHAR
+	, TurnAroundTime TIME
+	, Garm INT --FK, Garment
+	, Repairs INT --FK, Repairs
+	, Assingment INT -- FK(pulls in id#, emp#..etc) Employees assinged to specific garments 
+)
+
+CREATE TABLE CompanyInfo(
+	 CompName VARCHAR NOT NULL
+	, CompAddress VARCHAR
+	, CompPhone VARCHAR
+	, CompEmail VARCHAR
+	CONSTRAINT CompID PRIMARY KEY (CompName)
+)
+
+CREATE TABLE Repairs(
+	RepairID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, Garm INT -- FK, Garment
+	, RepairType VARCHAR
+	, RepairPerson VARCHAR
+	, RepairTime TIMESTAMP
+)
+
+CREATE TABLE Locker(
+	LockerNumber INT NOT NULL
+	, SerialNum INT 
+	, Combonation INT
+	, EmpID INT --FK, Emp
+	, Reasons VARCHAR
+	, CONSTRAINT LockNum PRIMARY KEY (LockerNumber)
+)
+
+CREATE TABLE UserRights( --Used for Activity (Labor) Report; may incorporate hierarchy
+	UserRights INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, EmpID INT -- FK, Emp
+	,
+)
+
+CREATE TABLE EmpUserOptions( --customizable and specified categories below
+	UserOpID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, SalesTax INT --FK, potentially Accting
+	, SalePriceAdjustment INT -- FK, '..'
+	, EmpSlotLenghth INT -- FK, figure out what this means
+	, ParLevels INT --FK
+	, InventoryDepreciation INT-- fk
+	, AltID INT -- FK, Tied to EMP
+	, Username VARCHAR
+	, EmpPassword VARCHAR -- Can create security feats
+)
+
+CREATE TABLE DeviceOptions(
+	DeviceOptionID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, SigPad VARCHAR
+	, LabelPrinter VARCHAR
+	, TouchScreen VARCHAR
+	, BulkScanner VARCHAR
+)
+
+CREATE TABLE Inventory(
+--ADD, FIND, DELETE - 3 CATEGORIES
+	InventoryID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, GarmentID INT -- FK, Garment
+	, Assignment INT --FK, Cleaner
+	, PickupTime TIME 
+	, PickupDate DATE
+	, DropoffTime TIME
+	, DropoffDate DATE
+	, Barcode INT --FK, Scan
+	, RFID INT --FK, Scan
+)
