@@ -67,7 +67,8 @@ CREATE TABLE garm_activity(
     pick_up_date_time DATETIME NOT NULL,-- time and date garm picked up
     drop_off_date_time DATETIME NOT NULL,-- time and date of dropoff
     assigned BIT,-- was this assigned to someone to take care of
-    one_for_one VARCHAR(255)-- lone one garm out to employee for missing garm
+    one_for_one VARCHAR(255),-- lone one garm out to employee for missing garm
+    loaned BIT
     );
     
     
