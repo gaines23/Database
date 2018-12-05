@@ -44,15 +44,6 @@ CREATE TABLE garment_default(
     
 
     
-CREATE TABLE emp_job_garm(
-	emp_id INT NOT NULL,-- employee id
-    hierarchy INT NOT NULL,-- job hierarchy
-    garm_id INT NOT NULL,-- type of garm and id
-    slot_num INT NOT NULL,-- slot number
-    alt_id INT-- Alternate id
-    );
-    
-    
 CREATE TABLE emp_order(
 	emp_order_id INT NOT NULL,-- order number
     emp_id INT NOT NULL,-- employee id
