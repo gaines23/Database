@@ -1,0 +1,206 @@
+CREATE TABLE employee(
+	emp_id int NOT NULL PRIMARY KEY,
+    first_name CHAR(255) NOT NULL,
+    last_name CHAR(255) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(255),
+    email VARCHAR(255),
+	hierarchy INT,-- job hierarchy
+    garm_id INT,-- type of garm and id
+    slot_num INT,-- slot number
+    alt_id INT
+    );
+  
+
+CREATE TABLE customer(
+	customer_id int NOT NULL PRIMARY KEY,
+    first_name CHAR(255) NOT NULL,
+    last_name CHAR(255) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(255),
+    email VARCHAR(255)
+    );
+    
+    
+CREATE TABLE garments(
+	garm_id INT NOT NULL PRIMARY KEY,-- garment unique id
+    garm_description INT NOT NULL,-- garm description info
+    department INT NOT NULL,-- garm defined by job
+    scan INT NOT NULL,-- RFID,BARCODE #
+    slot_number INT NOT NULL,-- slot # garm is on
+    cleaning_number INT NOT NULL,-- number of times garments been washed
+    multiuse BIT-- more than one use for garm
+    );
+    
+    
+
+CREATE TABLE garment_default(
+	garm_id INT NOT NULL PRIMARY KEY,-- unique id for each value
+    garm_type VARCHAR(255) NOT NULL,-- type of garment
+    garm_size VARCHAR(255) NOT NULL,-- size of garment
+    garm_length VARCHAR(255),-- length of gament type
+    garm_cost DECIMAL(15,2)-- cost of garments
+    );
+    
+
+    
+CREATE TABLE emp_job_garm(
+	emp_id INT NOT NULL,-- employee id
+    hierarchy INT NOT NULL,-- job hierarchy
+    garm_id INT NOT NULL,-- type of garm and id
+    slot_num INT NOT NULL,-- slot number
+    alt_id INT-- Alternate id
+    );
+    
+    
+CREATE TABLE emp_order(
+	emp_order_id INT NOT NULL,-- order number
+    emp_id INT NOT NULL,-- employee id
+    hierarchy INT NOT NULL,-- job hierarchy
+    garm_id INT NOT NULL-- type of garm and id
+    );
+    
+CREATE TABLE garm_activity(
+	emp_id INT NOT NULL,-- employee id
+    slot_num INT NOT NULL,-- slot number
+    garm_id INT NOT NULL,-- type of garm and id
+    pick_up_date_time DATETIME NOT NULL,-- time and date garm picked up
+    drop_off_date_time DATETIME NOT NULL,-- time and date of dropoff
+    assigned BIT,-- was this assigned to someone to take care of
+    one_for_one VARCHAR(255)-- lone one garm out to employee for missing garm
+    );
+    
+    
+CREATE TABLE non_tagged_garm(
+	garm_id INT NOT NULL,-- garment id
+    assigned VARCHAR(255) NOT NULL,-- who is it assigned to
+    loaned BIT,-- is it loaned?
+    sold BIT-- is it sold
+    );
+    
+    
+    
+CREATE TABLE hierarchy(
+	job_hierarchy_id INT PRIMARY KEY,
+    division VARCHAR(255),-- represents major sectors of organization
+    department VARCHAR(255),-- department classification
+    job VARCHAR(255) NOT NULL,-- specific job of employee
+    par_level VARCHAR(255)-- type of style and garment compromissing uniform
+    );
+    
+
+CREATE TABLE scan(
+	scan_id INT PRIMARY KEY NOT NULL,-- scan id
+    rfid INT,-- RFID code
+    barcode VARCHAR(255),-- barcode scanned
+    scan_time TIMESTAMP NOT NULL-- time garment is scanned
+    );
+    
+    
+    
+CREATE TABLE manufacturer(
+	manufacturer_name VARCHAR(255) NOT NULL,-- name of manufacturer
+    manufacturer_address VARCHAR(255) NOT NULL,-- address of manufacturer
+    manufacturer_phone VARCHAR(255),-- manufacturer phone number
+    manufacturer_email VARCHAR(255),-- manufacturer email
+    garment INT NOT NULL,-- garment by manufacturer
+    garm_cost DECIMAL(15,2) NOT NULL-- cost of each garment
+    );
+    
+    
+    
+CREATE TABLE cleaners(
+	cleaner_name VARCHAR(255) NOT NULL,-- name of cleaner
+    cleaner_address VARCHAR(255) NOT NULL,-- cleaner address
+    cleaner_phone VARCHAR(255),-- cleaner's phone number
+    cleaner_email VARCHAR(255),-- cleaner's email
+    turn_around TIME NOT NULL,-- how long it takes the cleaners to complete orders
+    garm_id INT NOT NULL,-- garment id
+    repairs INT,-- repairs on garments
+    assignment INT NOT NULL-- employees assigned to garments
+    );
+    
+    
+    
+CREATE TABLE company_info(
+	company_name VARCHAR(255) NOT NULL,-- name of company
+    company_address VARCHAR(255) NOT NULL,-- company address
+    company_phone VARCHAR(255),-- company phone number
+    company_email VARCHAR(255)-- company email
+    );
+    
+    
+    
+CREATE TABLE repairs(
+	garm_id INT NOT NULL,-- garment id
+    repair_type VARCHAR(255) NOT NULL,-- type of repair on garments
+    repair_person VARCHAR(255) NOT NULL,-- person responsible of repair
+    repair_time TIME NOT NULL,-- time of repair
+    repair_date DATE NOT NULL-- date of repair
+    );
+    
+
+    
+CREATE TABLE locker(
+	locker_num INT PRIMARY KEY,-- locker number assigned
+    serial_num INT NOT NULL,-- serial number of locker
+    combination VARCHAR(20) NOT NULL,-- combo of locker
+    emp_id INT NOT NULL,-- employee assigned to locker
+    reason VARCHAR(255)-- why employee has a locker
+    );
+    
+    
+    
+CREATE TABLE employee_user_options(
+	sales_tax DECIMAL(15,2) NOT NULL,-- sales tax on garms(if employee purchases)
+    sale_adjustment DECIMAL(15,2),-- cost difference from when first purchased
+    emp_slot_length INT,-- emp with more then 1 slot assigned
+    par_level INT,-- type of style and garm per employee
+    inventory_depreciation INT,-- garment that deprciate over time
+    alt_id INT,-- alternate id
+    username VARCHAR(255),-- emp username
+    emp_password VARCHAR(255)-- employee password
+    );
+    
+    
+    
+CREATE TABLE device_options(
+	signature BIT,-- signature pad
+    label_printer BIT,-- label printer
+    touch_screen BIT,-- touch screen
+    bulk_scanner BIT-- bulk scanner
+    );
+    
+    
+    
+CREATE TABLE inventory(
+	garm_id INT,-- garment id
+    assignment INT,-- whos cleaning the garment
+    pick_up_time TIME,-- garm pickup time
+    pick_up_date DATE,-- garm pickup date
+    drop_off_time TIME,-- garm dropoff time
+    barcode INT,-- garm barcode
+    rfid INT-- garm rfid code
+    );
+	
+	
+CREATE TABLE purchase_order(
+	purchase_order_id INT PRIMARY KEY,
+    rfid INT,
+    barcode INT
+    );
+
+	
+	
+CREATE TABLE ticket_create (
+  ticket_number INT NOT NULL,
+  emp_id INT,
+  first_name varchar(255) NOT NULL,
+  last_name varchar(255) NOT NULL,
+  clean tinyint(1) NOT NULL,
+  repairs tinyint(1) NOT NULL,
+  checked_in datetime,
+  returned datetime,
+  repair_type varchar(255),
+  location varchar(255)
+  );
