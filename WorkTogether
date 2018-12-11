@@ -32,19 +32,19 @@ CREATE TABLE Customer( --Laundry Matt
 )
 
 CREATE TABLE CompanyInfo( -- Works for all
-	 CompName VARCHAR NOT NULL
-	, CompAddress VARCHAR
+	 CompName VARCHAR(MAX) NOT NULL
+	, CompAddress VARCHAR(MAX)
 	, CompPhone VARCHAR
-	, CompEmail VARCHAR
+	, CompEmail VARCHAR(MAX)
 	CONSTRAINT CompID PRIMARY KEY (CompName)
 )
 
 CREATE TABLE Cleaners( --  
 	CleanersID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
-	, CleanerName VARCHAR
-	, CleanerAddress VARCHAR
-	, CleanerPhone VARCHAR
-	, CleanerEmail VARCHAR
+	, CleanerName VARCHAR(MAX)
+	, CleanerAddress VARCHAR(MAX)
+	, CleanerPhone VARCHAR(MAX)
+	, CleanerEmail VARCHAR(MAX)
 	, TurnAroundTime TIME
 	, Garm INT --FK, Garment
 	, Repairs INT --FK, Repairs
@@ -53,22 +53,22 @@ CREATE TABLE Cleaners( --
 
 CREATE TABLE Manufacturer( --For companies that buy their clothing 
 	ManufacturerID INT IDENTITY NOT NULL PRIMARY KEY
-	, ManuName VARCHAR 
-	, ManuAddress VARCHAR
-	, ManuPhone VARCHAR
-	, ManuEmail VARCHAR
+	, ManuName VARCHAR(MAX) 
+	, ManuAddress VARCHAR(MAX)
+	, ManuPhone VARCHAR(MAX)
+	, ManuEmail VARCHAR(MAX)
 	, Garm INT --FK, Garment
 	, GarmCost INT --FK, Default values
 )
 
 CREATE TABLE GarmDefaultValues(
 	GarmDefaultID INT --PK
-	, GarmType VARCHAR
-	, GarmSize VARCHAR
-	, GarmLength VARCHAR
+	, GarmType VARCHAR(MAX)
+	, GarmSize VARCHAR(MAX)
+	, GarmLength VARCHAR(MAX)
 	, GarmCost MONEY
 	, MultiUse BIT
-	, GarmDescription VARCHAR
+	, GarmDescription VARCHAR(MAX)
 	, Department INT -- FK, Hierarchy
 )
 
@@ -88,7 +88,7 @@ CREATE TABLE GarmActivity(-- 1-1 EMPLOYEE; 1-1 GARM -- 1 Act TO 1 Emp TO 1 Garm
 	, DropoffTime INT -- INVENTORY
 	, Assigned BIT
 	, Loaned BIT 
-	, OneForOne VARCHAR -- Loan one out to emp
+	, OneForOne BIT -- Loan one out to emp
 	, CONSTRAINT GarmActID PRIMARY KEY (GarmActivityID)
 )
 
@@ -108,7 +108,7 @@ CREATE TABLE Inventory(
 CREATE TABLE NonTaggedGarm( -- May have to define further
 	NonTaggedGarmID INT NOT NULL
 	, Garm INT -- FK
-	, Assigned VARCHAR -- fk
+	, Assigned VARCHAR(MAX) -- fk
 	, Loaned BIT --May be VARCHAR, depending on how we define this
 	, Sold BIT
 	, CONSTRAINT NoTagsID PRIMARY KEY (NonTaggedGarmID)
@@ -116,10 +116,10 @@ CREATE TABLE NonTaggedGarm( -- May have to define further
 
 CREATE TABLE Hierarchy(
 	JobHierarchyID INT --PK
-	, Division VARCHAR
-	, Department VARCHAR
-	, Job VARCHAR
-	, PAR_Level VARCHAR -- employee accountability of garments per emp; if emp has 3, then there has to be 3 at all times
+	, Division VARCHAR(MAX)
+	, Department VARCHAR(MAX)
+	, Job VARCHAR(MAX)
+	, PAR_Level VARCHAR(MAX) -- employee accountability of garments per emp; if emp has 3, then there has to be 3 at all times
 )
 
 CREATE TABLE PurchaseOrder( --Companies
@@ -140,7 +140,7 @@ CREATE TABLE EmpOrder( --Luandry Matts
 CREATE TABLE Scan(
 	ScanID INT NOT NULL
 	, RFID INT
-	, BARCODE VARCHAR
+	, BARCODE VARCHAR(MAX)
 	, ScanTime TIMESTAMP NOT NULL
 	, CONSTRAINT ScanNumID PRIMARY KEY (ScanID, ScanTime)
 )
@@ -148,8 +148,8 @@ CREATE TABLE Scan(
 CREATE TABLE Repairs(
 	RepairID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
 	, Garm INT -- FK, Garment
-	, RepairType VARCHAR
-	, RepairPerson VARCHAR
+	, RepairType VARCHAR(MAX)
+	, RepairPerson VARCHAR(MAX)
 	, RepairTime TIMESTAMP
 )
 
@@ -158,7 +158,7 @@ CREATE TABLE Locker(
 	, SerialNum INT 
 	, Combonation INT
 	, EmpID INT --FK, Emp
-	, Reasons VARCHAR
+	, Reasons VARCHAR(MAX)
 	, CONSTRAINT LockNum PRIMARY KEY (LockerNumber)
 )
 
@@ -180,10 +180,10 @@ CREATE TABLE TicketCreate( -- Laundry Matts
 
 CREATE TABLE DeviceOptions(
 	DeviceOptionID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
-	, SigPad VARCHAR
-	, LabelPrinter VARCHAR
-	, TouchScreen VARCHAR
-	, BulkScanner VARCHAR
+	, SigPad VARCHAR(MAX)
+	, LabelPrinter VARCHAR(MAX)
+	, TouchScreen VARCHAR(MAX)
+	, BulkScanner VARCHAR(MAX)
 )
 
 
@@ -201,6 +201,6 @@ CREATE TABLE EmpUserOptions( --customizable and specified categories below
 	, ParLevels INT --FK
 	, InventoryDepreciation INT-- fk
 	, AltID INT -- FK, Tied to EMP
-	, Username VARCHAR
-	, EmpPassword VARCHAR -- Can create security feats
+	, Username VARCHAR(MAX)
+	, EmpPassword VARCHAR(MAX) -- Can create security feats
 )
