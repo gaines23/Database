@@ -65,4 +65,24 @@ CREATE TABLE TicketCreate( -- Laundry Matts
 		ON UPDATE CASCADE
 )
 
+CREATE TABLE GarmentCreate(
+	GarmCusAcctID INT NOT NULL 
+	, TicketNumber INT NOT NULL 
+	, GarmentNumber INT NOT NULL 
+	, GarmDescription VARCHAR(25) NULL
+	, ServicePrice DECIMAL(3,2) NULL
+	, ServiceType VARCHAR(10) NULL
+	, GarmColor VARCHAR(10) NULL
+	, TransactionDate DATE NOT NULL 
+	, TransactionTime TIME(0) NOT NULL 
+--	, TransDateTime TIMESTAMP NOT NULL 
+	, CONSTRAINT PKGarmID PRIMARY KEY (GarmentNumber)
+	, CONSTRAINT FKCusAcctID FOREIGN KEY (GarmCusAcctID)
+		REFERENCES CustomerCreate(AccountNumber)
+	 , CONSTRAINT FKTicNumID FOREIGN KEY (TicketNumber)
+		REFERENCES TicketCreate(TicketNumber)		
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+)
+
 -- LAUNDROMAT DATABASE
