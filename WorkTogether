@@ -34,7 +34,7 @@ CREATE TABLE Customer( --Laundry Matt
 CREATE TABLE CompanyInfo( -- Works for all
 	 CompName VARCHAR(MAX) NOT NULL
 	, CompAddress VARCHAR(MAX)
-	, CompPhone VARCHAR
+	, CompPhone VARCHAR (12)
 	, CompEmail VARCHAR(MAX)
 	CONSTRAINT CompID PRIMARY KEY (CompName)
 )
