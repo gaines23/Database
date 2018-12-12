@@ -23,7 +23,7 @@ CREATE TABLE Employee( --Casinos, etc
 )
 
 CREATE TABLE CompanyInfo( -- Works for all
-	 CompName VARCHAR(MAX) NOT NULL
+	 CompName INT NOT NULL
 	, CompAddress VARCHAR(MAX)
 	, CompPhone VARCHAR (12) NULL
 	, CompEmail VARCHAR(MAX)
