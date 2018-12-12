@@ -173,7 +173,7 @@ CREATE TABLE TicketCreate( -- Laundry Matts
 	, TransactionTime TIME(0) NOT NULL
 	, CONSTRAINT PKTicketID PRIMARY KEY (TicketNumber)
 	, CONSTRAINT FKCusInfoID FOREIGN KEY(TicCusAcctID)
-		REFERENCES CustomerCreate(AccountNumber)
+		REFERENCES Customer(CustomerID)
 		ON DELETE CASCADE    
 		ON UPDATE CASCADE
 )
