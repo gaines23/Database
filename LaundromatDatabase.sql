@@ -24,12 +24,12 @@ CREATE TABLE Cleaners( --
 )
 
 
-CREATE TABLE EmpOrder( --Luandry Matts
-	EmpOrderID INT NOT NULL
-	, EmpID INT -- FK EmployeeID
+CREATE TABLE CusOrder( --Luandry Matts
+	CusOrderID INT NOT NULL
+	, CustomerID INT -- FK EmployeeID
 	, Hierarchy INT -- FK Hierarchy 
 	, Garm INT -- FK Garm
-	, CONSTRAINT EmpOrdID PRIMARY KEY (EmpOrderID)
+	, CONSTRAINT CusOrdID PRIMARY KEY (CusOrderID)
 )
 
 CREATE TABLE Scan(
@@ -41,8 +41,18 @@ CREATE TABLE Scan(
 )
 
 
+CREATE TABLE SlotAssignment(
+	SlotAssignmentID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, SlotNumber INT NOT NULL
+	, ConveyourNum INT NOT NULL
+	, CusID INT NOT NULL
+	, GarmID INT NOT NULL
+	);
+
+
 CREATE TABLE Repairs(
 	RepairID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, CustomerID INT NOT -- fk to custopmer table.
 	, Garm INT -- FK, Garment
 	, RepairType VARCHAR(MAX)
 	, RepairPerson VARCHAR(MAX)
