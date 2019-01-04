@@ -136,7 +136,7 @@ CREATE TABLE Repairs(
 CREATE TABLE Locker(
 	LockerNumber INT NOT NULL
 	, SerialNum INT 
-	, Combonation INT
+	, Combonation VARCHAR(8) -- INT doesnt let you properly add combination, changed to varchar(8)
 	, EmpID INT --FK, Emp
 	, Reasons VARCHAR(MAX)
 	, CONSTRAINT LockNum PRIMARY KEY (LockerNumber)
