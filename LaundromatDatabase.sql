@@ -76,6 +76,24 @@ CREATE TABLE Repairs(
 )
 -- Having CusID refrence to the customer table as well
 
+CREATE TABLE GarmDefaultValues(
+	GarmDefaultID INT IDENTITY(1,1) PRIMARY KEY NOT NULL
+	, GarmType VARCHAR(MAX)
+	, GarmSize VARCHAR(MAX)
+	, GarmLength VARCHAR(MAX)
+	, GarmCost VARCHAR(MAX)
+	, GarmColor BIT
+	, GarmDescription VARCHAR(MAX)
+)
+
+CREATE TABLE Accounting( --probably need to add more in future
+	AccoutingID INT IDENTITY(1,1) NOT NULL PRIMARY KEY 
+	, CusID INT
+	, TicketNum INT
+	, GarmNum INT
+	, TotalCost INT  
+)
+
 CREATE TABLE TicketCreate( -- Laundry Matts 
 	 TicCusAcctID INT NOT NULL  --pulled cus ID
 	, TicketNumber INT NOT NULL  --IDENTITY NOT NULL PRIMARY KEY 
