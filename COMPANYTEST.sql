@@ -24,6 +24,8 @@ CREATE TABLE Employee( --Casinos, etc
 	, Email VARCHAR(MAX) NOT NULL
 	, Hierarchy INT --FK Hierarchy
 	, AltID INT -- FK UserOptions
+	, CONSTRAINT FKHierarchyEmp FOREIGN KEY (Hierarchy)
+		REFERENCES Hierarchy(JobHierarchyID)
 )
 
 CREATE TABLE CompanyInfo( -- Works for all
@@ -42,6 +44,10 @@ CREATE TABLE Manufacturer( --For companies that buy their clothing
 	, ManuEmail VARCHAR(MAX)
 	, Garm INT --FK, Garment
 	, GarmCost INT --FK, Default values
+	, CONSTRAINT FKGarmManu FOREIGN KEY (Garm)
+		REFERENCES GarmDefaultValues(GarmDefaultID)
+	, CONSTRAINT FKGarmcost FOREIGN KEY (GarmCost)
+		REFERENCES GarmDefaultValues(GarmCost)
 )
 
 
@@ -57,6 +63,12 @@ CREATE TABLE GarmDefaultValues(
 	, JobHierarchyID INT -- FK, ADDED
 	, Division VARCHAR(MAX) -- ADDED
 	, Department VARCHAR(MAX) -- FK, Hierarchy, !!CHANGED TO VARCHAR FROM INT!!
+	, CONSTRAINT FKDepartment FOREIGN KEY (Department)
+		REFERENCES Hierarchy(Department)
+	, CONSTRAINT FKHierarchy FOREIGN KEY (JobHierarchyID)
+		REFERENCES Hierarchy(JobHierarchyID)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 	-- test with and without Division and Department, see which is faster processing and maintance control
 )
 
@@ -77,6 +89,12 @@ CREATE TABLE GarmActivity(-- 1-1 EMPLOYEE; 1-1 GARM -- 1 Act TO 1 Emp TO 1 Garm
 	, Loaned BIT 
 	, OneForOne BIT -- Loan one out to emp
 	, CONSTRAINT GarmActID PRIMARY KEY (GarmActivityID)
+	, CONSTRAINT FKGarmActivity FOREIGN KEY (Garm)
+		REFERENCES GarmDefaultValues(GarmDefaultID)
+	, CONSTRAINT FKEmpIDActivity FOREIGN KEY (EmpID)
+		REFERENCES Employee(EmpID)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 )
 
 CREATE TABLE Inventory(
@@ -90,6 +108,10 @@ CREATE TABLE Inventory(
 	, DropoffDate DATE
 	, Barcode INT --FK, Scan
 	, RFID INT --FK, Scan
+	, CONSTRAINT FKGarmID FOREIGN KEY (GarmentID)
+		REFERENCES Employee(GarmDefaultVaules)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 )
 
 CREATE TABLE NonTaggedGarm( -- May have to define further
@@ -99,6 +121,10 @@ CREATE TABLE NonTaggedGarm( -- May have to define further
 	, Loaned BIT --May be VARCHAR, depending on how we define this
 	, Sold BIT
 	, CONSTRAINT NoTagsID PRIMARY KEY (NonTaggedGarmID)
+	, CONSTRAINT FKGarmNT FOREIGN KEY (Garm)
+		REFERENCES GarmDefaultValues(GarmDefaultID)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 )
 
 CREATE TABLE Hierarchy(
@@ -107,6 +133,7 @@ CREATE TABLE Hierarchy(
 	, Department VARCHAR(MAX)
 	, Job VARCHAR(MAX)
 	, PAR_Level INT -- employee accountability of garments per emp; if emp has 3, then there has to be 3 at all times
+	, CONSTRAINT PKJobHierarchyID PRIMARY KEY (JobHierarchyIDHierarchy)
 )
 
 CREATE TABLE PurchaseOrder( --Companies
@@ -122,7 +149,15 @@ CREATE TABLE EmpOrder( --Luandry Matts
 	, Hierarchy INT -- FK Hierarchy 
 	, Garm INT -- FK Garm
 	, CONSTRAINT EmpOrdID PRIMARY KEY (EmpOrderID)
-)
+	, CONSTRAINT FKHierarchy FOREIGN KEY (Hierarchy) -- ALL constraints are new
+		REFERENCES Hierarachy(JobHierarchyID)
+	, CONSTRAINT FKGarm FOREIGN KEY (Garm)
+		REFERENCES GarmDefaultValuees(GarmDefaultID)
+	, CONSTRAINT FKEmpID FOREIGN KEY (EmpID)
+		REFERENCES Employee(EmpID)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+) -- TRY RUNNING AT HOME
 
 CREATE TABLE Scan(
 	ScanID INT NOT NULL
@@ -139,7 +174,13 @@ CREATE TABLE Repairs(
 	, RepairType VARCHAR(MAX)
 	, RepairPerson VARCHAR(MAX)
 	, RepairTime TIMESTAMP
-)
+	, CONSTRAINT FKGarmRepair FOREIGN KEY (Garm)
+		REFERENCES GarmDefaultValues(GarmDefaultID)
+	, CONSTRAINT FKEmpIDRepairs FOREIGN KEY (EmpID)
+		REFERENCES Employee(EmpID)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+) -- ADDED FK's
 
 
 CREATE TABLE Locker(
@@ -149,6 +190,10 @@ CREATE TABLE Locker(
 	, EmpID INT --FK, Emp
 	, Reasons VARCHAR(MAX)
 	, CONSTRAINT LockNum PRIMARY KEY (LockerNumber)
+	, CONSTRAINT FKEmpIDLocker FOREIGN KEY (EmpID)
+		REFERENCES Employee(EmpID) -- ADDED CONSTRAINT
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 )
 
 CREATE TABLE TicketCreate( -- Laundry Matts 
