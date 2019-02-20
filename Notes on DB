@@ -1,0 +1,47 @@
+-- Placed each section in the order I believe everything would read off the other tables
+	-- Will help determine PKs and FKs
+
+-- TO DO:
+	-- Have to rename all definitions if they are too much like InvoTech
+	-- Need to focus on PAR Level logic -- Renamed EqEmpGarms (can rename later)
+	-- Merge Garment Definitions
+	-- Function to have equal Physical and System Inventory
+	-- Scheduling Procedures
+		-- Updates, Deletes, Modifications
+	-- Think about how to do Garm, Emp updates (mispelled name, wrong size, etc)
+	-- Size: S,M,L or 32,34,36?
+
+
+-- Changes I made to DB recently:
+	-- Changed up some methods for creating FKs, you will see below
+	-- Changed Garm Cost to DECIMAL(3,2) from MONEY 
+	-- Chnged MONEY(s) to DECIMAL (3,2) IN GarmDepreciation 
+	-- Added RepairsCost for customers that charged for repairs or get charged
+	-- Added new way Purchase Order will be ID'ed
+	-- Added GarmDefaultValue and OrderAmount to PurchaseOrder for better tracking and cost calculations
+	-- Added FK Constraints to RFID and Barcode in Inventory for all new garments that are purchased 
+	-- Added EmpID, TicketNumber, GarmentNumber to GarmentDepreciation to track specific garment
+		-- Added Cascade constraints to EmpID
+	-- Thought that Inventory should be a whole inventory that lays out every employees garments
+
+	-- NonTagged Inventory will hold all of the non tags that can be placed in inventory if an Emp needs a new garment
+	-- Added Total for each garmentID in Purchase Order
+	-- Added PAR Level on Inventory that will calculate total garms per Garm
+	-- Added PAR Level on Hierarchy for total per each garm
+	-- Added Sex on Hierarchy 
+	-- Addded Percentage of reserve stock needed for each garment in Hierarchy
+		--can change to GarmDefault if more logical
+	-- Added LifeExpectancy and GarmWeight to GarmDefaultValues
+	-- Added DesignatedSlots to Hierarchy -- Will need a Proc or Func to determine slots
+
+	-- Added EmpJobGarm to track emp specific garms
+	-- Added Cleaner Business info and Cleaning Acitivty
+
+	-- Added PreTagged Table
+	-- Added Accounting and Sales Tables under Accounting section
+	-- Changed everything from TIMESTAMP to DATE and TIME - Timestamp doesn't always work properly
+	-- Deleted "RepairTime", added Received and Completed as DATETIME
+	-- Added DelinquentGarm to GarmActivity; Then placed in MissingGarm
+	-- Added MissingGarm and DeletedGarm Tables
+	-- 
+
