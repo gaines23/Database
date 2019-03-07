@@ -10,53 +10,6 @@ GO
 USE CompanyTest
 GO
 
--- Placed each section in the order I believe everything would read off the other tables
-	-- Will help determine PKs and FKs
-
--- TO DO:
-	-- Have to rename all definitions if they are too much like InvoTech
-	-- Need to focus on PAR Level logic
-	-- Merge Garment Definitions
-	-- Function to have equal Physical and System Inventory
-	-- Scheduling Procedures
-		-- Updates, Deletes, Modifications
-	-- Think about how to do Garm, Emp updates (mispelled name, wrong size, etc)
-
-
--- Changes I made to DB recently:
-	-- Changed up some methods for creating FKs, you will see below
-	-- Changed Garm Cost to DECIMAL(3,2) from MONEY 
-	-- Chnged MONEY(s) to DECIMAL (3,2) IN GarmDepreciation 
-	-- Added RepairsCost for customers that charged for repairs or get charged
-	-- Added new way Purchase Order will be ID'ed
-	-- Added GarmDefaultValue and OrderAmount to PurchaseOrder for better tracking and cost calculations
-	-- Added FK Constraints to RFID and Barcode in Inventory for all new garments that are purchased 
-	-- Added EmpID, TicketNumber, GarmentNumber to GarmentDepreciation to track specific garment
-		-- Added Cascade constraints to EmpID
-	-- Thought that Inventory should be a whole inventory that lays out every employees garments
-
-	-- NonTagged Inventory will hold all of the non tags that can be placed in inventory if an Emp needs a new garment
-	-- Added Total for each garmentID in Purchase Order
-	-- Added PAR Level on Inventory that will calculate total garms per Garm
-	-- Added PAR Level on Hierarchy for total per each garm
-	-- Added Sex on Hierarchy 
-	-- Addded Percentage of reserve stock needed for each garment in Hierarchy
-		--can change to GarmDefault if more logical
-	-- Added LifeExpectancy and GarmWeight to GarmDefaultValues
-	-- Added DesignatedSlots to Hierarchy -- Will need a Proc or Func to determine slots
-
-	-- Added EmpJobGarm to track emp specific garms
-	-- Added Cleaner Business info and Cleaning Acitivty
-
-	-- Added PreTagged Table
-	-- Added Accounting and Sales Tables under Accounting section
-	-- Changed everything from TIMESTAMP to DATE and TIME - Timestamp doesn't always work properly
-	-- Deleted "RepairTime", added Received and Completed as DATETIME
-	-- Added DelinquentGarm to GarmActivity; Then placed in MissingGarm
-	-- Added MissingGarm and DeletedGarm Tables
-	-- 
-
-
 
 ------ Employee information and related tables ------------------
 
@@ -73,25 +26,39 @@ CREATE TABLE Employee( --Basic emp information; Info for Hierarchy and Garms
 	, PhoneNmber VARCHAR(12) NOT NULL
 	, Email VARCHAR(MAX) NOT NULL
 	, Hierarchy INT --FK Hierarchy
-	, AltID INT -- FK UserOptions
-	, Reimbursement INT -- FK, ReturnedSales
-	, AlteractionInstructions VARCHAR(MAX) 
-	, CONSTRAINT FKHierarchyEmp FOREIGN KEY (Hierarchy)
-		REFERENCES Hierarchy(JobHierarchyID)
+	, AltID INT -- FK UserOptions, don't have this yet!
+	, ReturnID INT -- FK, ReturnedSales, ID
+	, AlterationInstructions VARCHAR(MAX) 
+	--, CONSTRAINT FKHierarchyEmp FOREIGN KEY (Hierarchy)
+	--	REFERENCES Hierarchy(JobHierarchyID)
 )
 
+/*
+DROP TABLE Employee
+SELECT * FROM Employee
+*/
+
+-- This is where GarmID is created; scanned -> inventory -> assigned to emp -> activity
 CREATE TABLE EmpJobGarm( -- Has specific garm info/inventory for specific emp; Overall info of garm, non logistical specifics
 -- Employee, Hierarchy
 -- GarmentNumber or Autoincrement PK?
-	EmpJobGarmID INT IDENTITY (1,1) NOT NULL PRIMARY KEY -- Autoincrement
-	, EmpID INT -- Employee 
-	, GarmNum INT -- FK, GarmActivity
+	EmpJobGarmID INT NOT NULL
+	, EmpID INT -- FK, Employee
+	, Hierarchy INT -- Hiearchy IDn
+	, GarmentID INT -- once Scanned, assigned to Emp and receives new GarmID
 	, GarmActivity INT -- GarmActivity information
+	, SlotNum INT -- FK, GarmActivity
 	, GarmType VARCHAR(MAX)-- specific to garm
 	, Size VARCHAR(MAX) -- specific to garm
 	, GarmLength VARCHAR(MAX) -- specific to garm
-	, EmpPAR_Level INT -- employee accountability of garments per emp; if emp has 3, then there has to be 3 at all times
+	, EqEmpGarms INT -- employee accountability of garments per emp; if emp has 3, then there has to be 3 at all times
+	, CONSTRAINT PKEmpJobGarm PRIMARY KEY (EmpID, GarmentID)
 )
+
+/*
+DROP TABLE EmpJobGarm
+SELECT * FROM EmpJobGarm
+*/
 
 CREATE TABLE Locker(
 	LockerNumber INT NOT NULL
@@ -100,10 +67,11 @@ CREATE TABLE Locker(
 	, EmpID INT --FK, Emp
 	, Reasons VARCHAR(MAX)
 	, CONSTRAINT LockNum PRIMARY KEY (LockerNumber)
-	, CONSTRAINT FKEmpIDLocker FOREIGN KEY (EmpID)
+/*	, CONSTRAINT FKEmpIDLocker FOREIGN KEY (EmpID)
 		REFERENCES Employee(EmpID) -- ADDED CONSTRAINT
 		ON DELETE CASCADE
 		ON UPDATE CASCADE
+*/
 )
 
 -------- Company, Manufacturer, Cleaning Information -----------------------------
@@ -123,19 +91,22 @@ CREATE TABLE Manufacturer( --For companies that buy their clothing from outside 
 	, ManuAddress VARCHAR(MAX)
 	, ManuPhone VARCHAR(MAX)
 	, ManuEmail VARCHAR(MAX)
+/*
 	, Garm INT --FK, Garment
 	, GarmCost DECIMAL(3,2) --FK, Default values
-	, CONSTRAINT FKGarmManu FOREIGN KEY (Garm)
+*/
+/*	, CONSTRAINT FKGarmManu FOREIGN KEY (Garm)
 		REFERENCES GarmDefaultValues(GarmDefaultID)
 	, FOREIGN KEY (GarmCost) REFERENCES GarmDefaultValues(GarmCost)
+*/
 )
 
 CREATE TABLE CleanerInfo(
-	CompanyID INT IDENTITY(1,1) PRIMARY KEY NOT NULL
-	, CompName INT NOT NULL
-	, CompAddress VARCHAR(MAX)
-	, CompPhone VARCHAR (15) NULL
-	, CompEmail VARCHAR(MAX)
+	CleanerID INT IDENTITY(1,1) PRIMARY KEY NOT NULL
+	, CleanerName INT NOT NULL
+	, CleanerAddress VARCHAR(MAX)
+	, CleanerPhone VARCHAR (15) NULL
+	, CleanerEmail VARCHAR(MAX)
 )
 
 --------- Garment Information and Assignment Details -------------------------------------------------------
@@ -152,10 +123,15 @@ CREATE TABLE Hierarchy(--dictates specific garms for emps, notifies when more of
 	, DesignatedSlots INT -- slot # between slot # for each Dept, Job - slot #; Will be a Procedure or Function
 )
 
+/*
+DROP TABLE Hierarchy
+SELECT * FROM HIERARCHY
+*/
+
 --check to see if we can pull Hierarchy data without adding Dept and Division columns
 CREATE TABLE GarmDefaultValues( --Specified for each Manufacturer for each garment; Sized may have different costs
 -- Type, Size, Length are ALL PREDEFINED; Added customizable options for missing values
-	GarmDefaultID INT IDENTITY(1,1) NOT NULL PRIMARY KEY --PK
+	GarmDefaultID INT IDENTITY(1,1) NOT NULL PRIMARY KEY --PK; unless company has specific default values
 	, Gender VARCHAR(1) -- added
 	, GarmType VARCHAR(MAX)
 	, GarmSize VARCHAR(MAX)
@@ -163,10 +139,14 @@ CREATE TABLE GarmDefaultValues( --Specified for each Manufacturer for each garme
 	, GarmCost DECIMAL(3,2) -- Can be edited for either historical costs or current date forward
 	, GarmWeight INT 
 	, MultiUse VARCHAR(1) -- (Y , N)
-	, PAR_Level INT -- Defined for specific garm
+	, EqEmpGarm INT -- Defined for specific Emp garm amount; max amount of garms
+	, EqGarmAmount INT -- Defined for specific garm; max amount of garms
 	, LifeExpectancy INT -- number of days used before worn out
-	, GarmDescription VARCHAR(MAX) -- Used if there is a multiuse, mention other departnebts its for
+	, MaxNumOfCleanings INT -- number of times can go through wash before worn out 
+		--Life expectancy is the total days worn, Max#OfCleanings is total times washed
+	, GarmDescription VARCHAR(MAX) -- Used if there is a multiuse, mention other departments its for
 	, JobHierarchyID INT -- FK, ADDED
+	, GarmManu INT -- FK
 
 --	, Division VARCHAR(MAX) -- ADDED
 --	, Department VARCHAR(MAX) -- FK, Hierarchy, !!CHANGED TO VARCHAR FROM INT!!
@@ -183,13 +163,15 @@ CREATE TABLE GarmDefaultValues( --Specified for each Manufacturer for each garme
 */
 )
 
+/*
 DROP TABLE GarmDefaultValues
 SELECT * FROM GarmDefaultValues
-
+*/
 --------------------------------------------------------------------------
 -- GarmDefaultValues ADDED Foreign Keys ----------------------------------
 -- Some tables needed to be created before FKs----------------------------
 
+/*
 ALTER TABLE GarmDefaultValues
 ADD FOREIGN KEY (Manufacturer) REFERENCES Manufacturer(ManuName)
 
@@ -199,6 +181,7 @@ ADD FOREIGN KEY (Department) REFERENCES Hierarchy(Department)
 ALTER TABLE GarmDefaultValues
 ADD CONSTRAINT (FKHierarchy)
 FOREIGN KEY (JobHierarchyID) REFERENCES Heirarchy(JobHierarchyID)
+*/
 
 --------------------------------------------------------------------------
 
@@ -206,13 +189,17 @@ CREATE TABLE GarmDepreciation(--Calculated depreciation costs and rates
 -- Reaches specific rate - add to purchase order?
 -- PurchaseOrder, GarmDefault, EmpJobGarm
 	GarmDeprecID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
-	, EmpID INT
-	, TicketNumber INT
-	, GarmentNumber INT
+	, EmpID INT -- FK
+--	, TicketNumber INT -- FK
+	, GarmentID INT --FK
+	, GarmMaxNumOfCleanings INT
 	, GarmNumOfCleanings INT
 	, GarmDepreciationCost DECIMAL(3,2)
-	, GarmAlterDerep DECIMAL(3,2)
-	, CONSTRAINT FKEmpID FOREIGN KEY(EmpID)
+	, GarmAlterCost DECIMAL(3,2) -- What is this? JK it's when there are repairs needed to be done on it
+	, PercentOfDepreciation INT -- Might have to write calc for this
+		-- ((Max#OfCleanings) - (GarmNumOfCleanings))/100.0 = %
+
+/*	, CONSTRAINT FKEmpID FOREIGN KEY(EmpID)
 		REFERENCES Employee(EmpID)
 		ON DELETE CASCADE
 		ON UPDATE CASCADE
@@ -220,51 +207,60 @@ CREATE TABLE GarmDepreciation(--Calculated depreciation costs and rates
 		REFERENCES TicketCreate(TicketNumber)
 	, CONSTRAINT FKGarmentID FOREIGN KEY(GarmentNumber)
 		REFERENCES GarmentCreate(GarmentNumber)
+*/
 )
 
 ----- Garment Inventory and Tracking -----------------------------------------------------
-
+-- Already have a preassigned ID from manufacturer 
 CREATE TABLE PreTaggedGarments( -- Garments received from PurchaseOrder, not barcoded or chipped
 -- Once Tagged, item is automatically subtracted
 	PreTaggedGarmID INT -- IDs created by Purchase Order Amount subtracted by actual amount (60 shirts - 50 = 1 thru 10 IDs)
 	, PurchaseOrder INT -- FK, PurchaseOrder
 	, ItemsMissing INT -- item removed from box but not entered into system
+	, CONSTRAINT PreTaggedID PRIMARY KEY (PreTaggedGarmID)
 )
 
 CREATE TABLE Scan( 
 	ScanID INT NOT NULL
 	, RFID INT
-	, BARCODE VARCHAR(MAX)
+	, BARCODE VARCHAR -- CHANGED FROM MAX, NEED TO SEE IF THIS WORKS WITH INPUT VALUES
 	, ScanTime DATETIME NOT NULL
 	, CONSTRAINT ScanNumID PRIMARY KEY (ScanID, ScanTime)
+	, CONSTRAINT barcode UNIQUE (BARCODE)
+	, CONSTRAINT rfid UNIQUE (RFID)
 )
 
-CREATE TABLE Inventory( --Overall inventory; Always be updating
+-- SELECT * FROM Scan
+-- DROP TABLE Scan
+
+CREATE TABLE Inventory( --Overall inventory; Always be updating; This is where everthing will CASCADE from
 -- If tagged, assigns GarmNum to EmpID
 -- Hand in hand with GarmActivity -- tracks specific garment if assigned
 --ADD, FIND, DELETE - 3 CATEGORIES
-	GarmentID INT -- assigned once assigned to emp; FK GarmActivity
+	GarmentID INT -- assigned once assigned to emp; FK EmpJobGarm
 	, EmpID INT -- FK, Employee, only when assigned
 	, SlotNum INT -- FK, GarmActivity
 	, Conveyor INT -- FK, GarmActivity
 	, GarmActivityID INT -- FK, GarmActivity
 	, GarmDefaultID INT -- FK, GarmDefaultValue
 	, ManufacturerID INT -- FK, Manufacturer
-	, GarmCost INT -- FK, DefaultValues
-	, AssignmentStatus INT --FK, Cleaner
+	, GarmCost DECIMAL(3,2) -- FK, DefaultValues
+--	, AssignmentStatus INT --FK, (NonTagged, Cleaner, etc) RIGHT?!
+		-- Probably have to write PROC since it takes info from different tables to categorize Status
 	, Barcode INT --Scan
 	, RFID INT -- Scan
 	, GarmLocation VARCHAR(MAX) -- Storage, laundry, etc (probably)
 	, EmpResponsible INT -- May just be EmpID as well, FK Emp
+	, CONSTRAINT GarmID PRIMARY KEY (GarmentID)
 )
 
-CREATE TABLE GarmActivity(-- Per day/per use
+CREATE TABLE GarmActivity(-- Per day/per use -- Pwe garment 
 -- Would activity influence Depreciation value? (yes?)
 -- Once in inventory, will be assigned, loaned, w/e
-	GarmActivityID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	GarmActivityID INT IDENTITY(1,1) NOT NULL
 	, EmpID INT -- FK Emp
-	, GarmID INT --Assigned from Inventory once tagged
-	, SlotNum INT -- Slot assigned to specific garm;
+	, GarmID INT --FK, EmpJobGarm; assigned to Emp and receives new GarmID
+	, SlotNum INT -- Slot assigned to specific garm then updated in inventory 
 	, Conveyor INT -- When there's more than 1 coneyor, this gets assigned as well
 	, RFID INT -- Inventory
 	, Barcode INT -- Inventory
@@ -276,47 +272,48 @@ CREATE TABLE GarmActivity(-- Per day/per use
 	, Assigned BIT
 	, Loaned INT -- 
 	, OneForOne BIT -- Loan one out to emp
-	, Missing DATETIME
-	, CONSTRAINT FKGarmActivity FOREIGN KEY (Garm)
-		REFERENCES GarmDefaultValues(GarmDefaultID)
-	, CONSTRAINT FKEmpIDActivity FOREIGN KEY (EmpID)
-		REFERENCES Employee(EmpID)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
+	, Missing DATETIME -- lost or stolen
+	, DelinquentGarm BIT -- only if not returned -- Cleaning Activity 
+	, CONSTRAINT PKGarmActivityID PRIMARY KEY(EmpID, SlotNum) --Maybe?
 )
 
+-- Have to figure out what updates what for missing garment info
+-- Missing = lost/stolen; Delinquent = never returned back to company
 CREATE TABLE MissingGarments(
 	MissingGarmID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
-	, GarmID INT -- FK, Inventory
+	, GarmID INT -- FK, EmpJobGarm
 	, MissingDateTime DATETIME -- FK, GarmActivity, Or GarmActivity
 	, GarmActivityID INT --FK, GarmActivity
 	, GarmDefaultValueID INT -- FK, GarmDefaultValue
-	, DelinquentGarm BIT -- FK, GarmActivity
+	, DelinquentGarm BIT -- FK, CleaningActivity
 )
 
-CREATE TABLE DeletedGarments(
+CREATE TABLE DeletedGarments( --Will stay in db for 30 days (or have customer 
+-- choose time frame?
 	DeletedGarmsID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
 	, GarmID INT -- FK, Inventory
 	, MissingGarmID INT -- FK, MissingGarment
 	, NonTaggedID INT -- FK, NonTaggedGarm
 )
 
+-- Should Assigned be BIT?
 CREATE TABLE NonTaggedGarm( --ID calculated from TOTAL ORDERED - TOTAL NOT TAGGED (50-40=10 new IDs)
 -- Items scanned, but not tagged for Emp use
 -- Still has GarmID
 -- May have to define further
 	NonTaggedGarmID INT NOT NULL
-	, Garm INT -- FK
-	, Assigned VARCHAR(MAX) -- fk, temp assignment
+	, GarmID INT -- FK
+	, Assigned VARCHAR(MAX) -- fk, temp assignment (BIT?)
 	, EmpID INT
 	, Loaned BIT --May be VARCHAR, depending on how we define this (by name?, YES/NO?)
 	, Sold BIT
-	, GarmLocation -- FK, Inventory
-	, CONSTRAINT NoTagsID PRIMARY KEY (NonTaggedGarmID)
-	, CONSTRAINT FKGarmNT FOREIGN KEY (Garm)
+	, GarmLocation VARCHAR(MAX) -- FK, Inventory
+	, CONSTRAINT NoTagsID PRIMARY KEY (NonTaggedGarmID, GarmID)
+/*	, CONSTRAINT FKGarmNT FOREIGN KEY (Garm)
 		REFERENCES GarmDefaultValues(GarmDefaultID)
 		ON DELETE CASCADE
 		ON UPDATE CASCADE
+*/
 )
 
 ----------- Accounting/Sales -----------------------------------
@@ -324,9 +321,9 @@ CREATE TABLE NonTaggedGarm( --ID calculated from TOTAL ORDERED - TOTAL NOT TAGGE
 --- Make PAR Levels perfect to avoid excess purchases
 
 CREATE TABLE Accounting(
-	AccountingID INT
-	, PurchaseOrderID INT
-	, EmpOrder INT
+	AccountingID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, PurchaseOrderID INT -- FK, PurchaseOrder
+	, EmpOrderID INT -- FK, EmpOrderID
 	, TotalSales DECIMAL(6,2)
 	, TotalPurchases DECIMAL(6,2)
 	, TotalEmpOrder DECIMAL(6,2)
@@ -334,62 +331,61 @@ CREATE TABLE Accounting(
 )
 
 CREATE TABLE Sales( -- Probably have to add more
-	SalesID INT 
-	, Inventory INT
-	, SalesPrice INT
-	, PurchaseOrderID INT 
-	, EmpOrderID INT
-	, GarmentDefaultValue INT
+-- Sale per garment, at least from what it loo
+-- rework - 
+	SalesID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
+	, GarmentID INT -- FK, 
+	, SalesPrice Decimal(3,2)  -- per garment
+	, PurchaseOrderID INT -- dont need because purchase info should already be logged in inv
+	, EmpOrderID INT -- fk
+	, GarmentDefaultValue INT -- fkz
 	, PurchaseDate DATE
-	, PurchaseCost DECIMAL(3,2)
+	, PurchaseCost DECIMAL(3,2) -- per garment
 	, PurchasedAmount INT
+	, SalesTax DECIMAL(3,2)
 )
 
 CREATE TABLE ReturnedSales(
-	ReturnedID INT -- PK, 
+	ReturnedID INT IDENTITY(1,1) NOT NULL PRIMARY KEY-- PK, 
 	, SalesID INT --FK, Sales
-	, PurchaseOrderID INT --FK, PurchaseOrder
+	--, PurchaseOrderID INT --FK, PurchaseOrder
 	, EmpOrderID INT --FK, EmpOrder
 	, Reimbursement DECIMAL(3,2)
 	, EmpID INT -- FK, EmpOrder
+	, GarmID INT
 )
+
+-- DROP TABLE ReturnedSales
 
 CREATE TABLE PurchaseOrder( --Companies place order to manufactures for specific amount of each garment; 
 --Ties in per type and amount of Garms ordered by company 
 	PurchaseOrderID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
-	, GarmentDefaultValue INT
+	, GarmentDefaultValue INT -- FK
 	, Garmsize VARCHAR(MAX) -- FK, Garmdefaultvalue
 	, OrderAmount INT
-	, TotalPerGarmID DECIMAL(3,2)
+	, Total DECIMAL(3,2)
 	, PurchaseDate DATE
 	, ExpectedDate DATE
 	, Reason VARCHAR(MAX) -- May just be drop down task
-	, ShippingInfo INT -- FK, Laundry, Manufacturer
+	, ManufacturerID INT -- FK, Laundry, Manufacturer
 	, ReceivedOrder BIT -- PreTaggedGarments
-	, CONSTRAINT FKGarmDefaultValue FOREIGN KEY(GarmDefaultValue)
-		REFERENCES GarmDefaultValues(GarmDefaultID)
 ) -- PURCAHSE ORDER ID MIGHT CHANGE BECAUSE HOW COMPANIES TRACK
 
 CREATE TABLE EmpOrder( --Luandry Matts; What each employee needs ordered for themselves
 	EmpOrderID INT NOT NULL
 	, EmpID INT -- FK EmployeeID
-	, RFID INT
-	, Barcode INT
+	, RFID INT -- FK
+	, Barcode INT -- FK
 	, Garment INT -- FK Garm
 	, Hierarchy INT -- FK Hierarchy 
-	, CONSTRAINT EmpOrdID PRIMARY KEY (EmpOrderID)
-	, CONSTRAINT FKHierarchy FOREIGN KEY (Hierarchy) -- ALL constraints are new
-		REFERENCES Hierarachy(JobHierarchyID)
-	, CONSTRAINT FKGarm FOREIGN KEY (Garm)
-		REFERENCES GarmDefaultValuees(GarmDefaultID)
-	, CONSTRAINT FKEmpID FOREIGN KEY (EmpID)
-		REFERENCES Employee(EmpID)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-	, CONSTRAINT FKRfid FOREIGN KEY (RFID)
-		REFERENCES PurchaseOrder(RFID)
-	, CONSTRAINT FKBarcode FOREIGN KEY (Barcode)
-		REFERENCES PurchaseOrder(Barcode) 
+	, GarmentSize VARCHAR(MAX)
+	, OrderAmount INT 
+	, Total DECIMAL(3,2)
+	, GarmDepreciationSales DECIMAL(3,2)
+	, GarmDeprecPercentage INT
+	-- , CONSTRAINT EmpOrdID PRIMARY KEY (EmpOrderID)
+		-- Will be a constraint when OrderIDs are assigned, until now, 
+		-- ID is (1,1) increment
 ) -- TRY RUNNING AT HOME
 
 
@@ -397,17 +393,18 @@ CREATE TABLE EmpOrder( --Luandry Matts; What each employee needs ordered for the
 -- Check-In, Ship, Receive, Check-In & Ship, Re-Clean
 
 CREATE TABLE CleaningActivity( -- Needs to be cleaned(tehe) up
+-- Might have to rethink PK
 	CleaningActID INT IDENTITY(1,1) NOT NULL PRIMARY KEY
-	, CleanerInfo INT -- FK, CleanerInfo
+	, CleanerName INT -- FK, CleanerInfo
 	, GarmID INT -- FK, GarmActivity
 	, RFID INT -- FK, Inventory
 	, Barcode INT -- FK, Inventory
 	, CheckIn BIT -- Yes, No; if Yes, then "At Cleaner"; No, then "At Checkin"
 	, CheckInTime TIME
 	, CheckInDate Date
-	, CheckoutTime TIME --
+	, CheckOutTime TIME 
 	, CheckOutDate DATE
-	, DelinquentGarms BIT -- When not Checkedout for a period of time, Yes/No
+	, DelinquentGarm BIT -- When not Checkedin for a period of time, Yes/No
 		-- If yes, placed in Missing, then deleted 
 )
 
@@ -448,6 +445,10 @@ CREATE TABLE DeviceOptions(
 
 ----- Might Not Need -------------------------------------------------------------
 
+----- Tickets should be used only for Emps that have multiple garments on one 
+---- or separate slots
+
+/*
 CREATE TABLE TicketCreate( -- Laundry Matts 
 	 AccountNumber INT NOT NULL  --pulled cus ID
 	, TicketNumber INT NOT NULL  --IDENTITY NOT NULL PRIMARY KEY 
@@ -459,8 +460,10 @@ CREATE TABLE TicketCreate( -- Laundry Matts
 	, TransactionDate DATE NOT NULL 
 	, TransactionTime TIME(0) NOT NULL
 	, CONSTRAINT PKTicketID PRIMARY KEY (TicketNumber)
-	, CONSTRAINT FKEmpTicID FOREIGN KEY(AccountNumber)
+/*	, CONSTRAINT FKEmpTicID FOREIGN KEY(AccountNumber)
 		REFERENCES Employee(EmpID)
 		ON DELETE CASCADE    
 		ON UPDATE CASCADE
+*/
 )
+*/
